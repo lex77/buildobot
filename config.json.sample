@@ -1,0 +1,8 @@
+{
+	"builddir": "/home/builder/rpm",
+	"repo_url": "https://somesite.com/repo/",
+	"token": "<TELEGRAM_BOT_API_TOKEN>",
+	"sqlite": "sqlite/database.sqlite",
+	"remote_repo": "user@host.com",
+	"remote_repo_path": "/srv/www/somesite.com/repo"
+}

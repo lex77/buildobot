@@ -1,0 +1,42 @@
+#!/bin/bash
+
+pkgdir=$(uuidgen)
+
+build_rpm() {
+    cd "${rpm_src}" || exit 1
+    mkdir -p "${pkgdir}"/{BUILD,BUILDROOT,RPMS,SOURCES,SPECS,SRPMS}
+    mkdir -p "${pkgdir}/SOURCES/${rpm_project}-${rpm_commit}"
+
+    find . -not -path "./.git*" -not -path "./${pkgdir}*" -not -path "." -exec cp -r --parents {} "${pkgdir}/SOURCES/${rpm_project}-${rpm_commit}" \;
+    pushd "${pkgdir}/SOURCES"
+    tar cfz "${rpm_project}-${rpm_commit}.tar.gz" "${rpm_project}-${rpm_commit}/"
+    cp "${rpm_project}-${rpm_commit}/${rpm_project}.spec" "../SPECS"
+    popd
+    rm -rf "${pkgdir}/SOURCES/${rpm_project}-${rpm_commit}/"
+
+    pushd "${pkgdir}"
+    rpmbuild -bb --define "_rpm_version ${rpm_commit}" "SPECS/${rpm_project}.spec"
+    if [ ! $? = 0 ]; then
+        exit 1
+    fi
+    popd
+}
+
+build_rpm
+
+if ! ssh "$REMOTE_REPO" "mkdir -p $REMOTE_REPO_PATH/${rpm_project}";
+then
+    exit 1
+fi
+
+if ! rsync --progress --update -t -av "${pkgdir}/RPMS/" --rsh=ssh "$REMOTE_REPO":"$REMOTE_REPO_PATH/${rpm_project}";
+then
+    exit 1
+fi
+
+if ! ssh "$REMOTE_REPO" createrepo --update -s sha1 "$REMOTE_REPO_PATH";
+then
+    exit 1
+fi
+
+rm -rf "./${pkgdir}/"
