@@ -15,7 +15,7 @@ build_rpm() {
     rm -rf "${pkgdir}/SOURCES/${rpm_project}-${rpm_commit}/"
 
     pushd "${pkgdir}"
-    rpmbuild -bb --define "_rpm_version ${rpm_commit}" "SPECS/${rpm_project}.spec"
+    rpmbuild -bb --define "_rpm_version ${rpm_commit}" --define "_rpm_branch .${rpm_branch}" "SPECS/${rpm_project}.spec"
     if [ ! $? = 0 ]; then
         exit 1
     fi
