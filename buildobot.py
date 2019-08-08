@@ -17,7 +17,7 @@ from telebot import apihelper
 with open('config.json') as json_data_file:
     cfg = json.load(json_data_file)
 
-#apihelper.proxy = {'https':'socks5://10.0.0.10:3128'}
+#apihelper.proxy = {'https':'socks5://10.0.0.2:3128'}
 os.environ["REMOTE_REPO"] = cfg["remote_repo"]
 os.environ["REMOTE_REPO_PATH"] = cfg["remote_repo_path"]
 
@@ -179,6 +179,7 @@ def callback_worker(call):
 # Handler for /log
 @bot.message_handler(content_types=['text'], commands=['log'])
 def log_start(message):
+    write_log(message, "[INFO] Command /log")
     bot.send_message(message.chat.id, 'Показать лог начиная с какой даты/времени? (YYYY-MM-DD HH:MM:SS)')
     bot.register_next_step_handler(message, get_log_from)
 
@@ -192,6 +193,8 @@ def get_log_to(message):
     set_state(message.chat.id, 'log_to', message.text)
 
     state = get_state(message.chat.id)
+
+    write_log(message, "[INFO] Request log from {} to {}".format(state['log_from'], state['log_to']))
     cur = db.cursor()
     cur.execute("SELECT id, user_id, datetime(datetime, 'unixepoch', 'localtime'), first_name, message "
                 "FROM log WHERE datetime "
